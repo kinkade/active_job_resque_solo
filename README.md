@@ -38,8 +38,8 @@ Solo will prevent a new instance of the job from being enqueued.
 
 You can control which named arguments are used to determine uniqueness in the queue:
 
-`solo_only_args`
-`solo_except_args`
+* `solo_only_args`
+* `solo_except_args`
 
 ```ruby
 class MyJob < ActiveJob::Base
@@ -81,7 +81,7 @@ so be sure to check out other gems for locking if your job is not idempotent.
 
 1. When multiple processes simultaneously attempt to enqueue the same job two or
 more may be enqueued.
-2. If your queue has many jobs, and workers remove a job during while Solo scans
+2. If your queue has many jobs, and workers remove a job while Solo scans
 the queue, it's possible for the original enqueued job to be missed. Solo will allow
 the new instance of the job to be enqueued.
 
