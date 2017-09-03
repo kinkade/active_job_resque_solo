@@ -79,8 +79,8 @@ While this plugin will greatly reduce duplicate instances of a job from being
 enqueued, there are two scenarios where duplicates may still be enqueued,
 so be sure to check out other gems for locking if your job is not idempotent.
 
-1. When multiple processes simultaneously attempt to enqueue the same job two or
-more may be enqueued.
+1. When multiple processes simultaneously attempt to enqueue the same job, two or
+more instances may be enqueued.
 2. If your queue has many jobs, and workers remove a job while Solo scans
 the queue, it's possible for the original enqueued job to be missed. Solo will allow
 the new instance of the job to be enqueued.

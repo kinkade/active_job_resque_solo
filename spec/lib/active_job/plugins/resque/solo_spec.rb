@@ -5,12 +5,13 @@ RSpec.describe ActiveJob::Plugins::Resque::Solo do
 
   QUEUE = "default_test_queue"
 
+  before { allow(ActiveJob::Plugins::Resque::Solo::Inspector).to receive(:resque_present?).and_return(true) }
+
   describe "#perform_later" do
     class DefaultTestJob < ActiveJob::Base
       include ActiveJob::Plugins::Resque::Solo
       queue_as QUEUE
 
-      def self.resque_present?; true; end
       def perform(*args); end
     end
 
@@ -121,5 +122,33 @@ RSpec.describe ActiveJob::Plugins::Resque::Solo do
       end
     end
   end
+
+  describe "#solo_only_args" do
+    context "when no arguments are present" do
+      it "should raise an ArgumentError" do
+        expect do
+          class BadOnlyArgsJob < ActiveJob::Base
+            include ActiveJob::Plugins::Resque::Solo
+            solo_only_args
+          end
+        end.to raise_error(ArgumentError)
+      end
+    end
+  end
+
+  describe "#solo_except_args" do
+    context "when no arguments are present" do
+      it "should raise an ArgumentError" do
+        expect do
+          class BadExceptArgsJob < ActiveJob::Base
+            include ActiveJob::Plugins::Resque::Solo
+            solo_except_args
+          end
+        end.to raise_error(ArgumentError)
+      end
+    end
+  end
+
+
 end
 
