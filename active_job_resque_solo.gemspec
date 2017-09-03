@@ -12,6 +12,7 @@ Gem::Specification.new do |spec|
   spec.summary       = %q{Prevents duplicate ActiveJob+Resque jobs from being enqueued.}
   spec.description   = %q{If you are using ActiveJob with the Resque Adapter, this gem will help prevent duplicate jobs, based on arguments, from being enqueued to Resque.}
   spec.license       = "MIT"
+  spec.homepage      = "https://github.com/kinkade/active_job_resque_solo"
 
   spec.files         = `git ls-files -z`.split("\x0").reject do |f|
     f.match(%r{^(test|spec|features)/})
