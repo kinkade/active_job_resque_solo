@@ -2,6 +2,8 @@
 
 A plugin for ActiveJob with Resque to prevent duplicate enqueing of jobs.
 
+[![Build Status](https://travis-ci.org/kinkade/active_job_resque_solo.svg?branch=master)](https://travis-ci.org/kinkade/active_job_resque_solo)
+
 ## Installation
 
 Add this line to your application's Gemfile:
@@ -98,4 +100,4 @@ The gem is available as open source under the terms of the [MIT License](http://
 
 ## Code of Conduct
 
-Everyone interacting in the ActiveJobResqueSolo project’s codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/[USERNAME]/active_job_resque_solo/blob/master/CODE_OF_CONDUCT.md).
+Everyone interacting in the ActiveJobResqueSolo project’s codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/kinkade/active_job_resque_solo/blob/master/CODE_OF_CONDUCT.md).
