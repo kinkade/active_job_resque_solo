@@ -2,6 +2,7 @@ require 'spec_helper'
 
 RSpec.describe ActiveJob::Plugins::Resque::Solo do
   include_context "fake resque"
+  include_context "fake resque redis"
 
   QUEUE = "default_test_queue"
 
@@ -149,6 +150,39 @@ RSpec.describe ActiveJob::Plugins::Resque::Solo do
     end
   end
 
+  describe "#solo_lock_key_prefix" do
+    context "when a blank argument is used" do
+      it "should raise an ArgumentError" do
+        expect do
+          class BadLockKeyJob < ActiveJob::Base
+            include ActiveJob::Plugins::Resque::Solo
+            solo_lock_key_prefix ""
+          end
+        end.to raise_error(ArgumentError)
+      end
+    end
 
+    context "when a string with only spaces is used" do
+      it "should raise an ArgumentError" do
+        expect do
+          class BadLockKeyJob < ActiveJob::Base
+            include ActiveJob::Plugins::Resque::Solo
+            solo_lock_key_prefix " "
+          end
+        end.to raise_error(ArgumentError)
+      end
+    end
+
+    context "when no arguments are present" do
+      it "should raise an ArgumentError" do
+        expect do
+          class BadLockKeyJob < ActiveJob::Base
+            include ActiveJob::Plugins::Resque::Solo
+            solo_lock_key_prefix
+          end
+        end.to raise_error(ArgumentError)
+      end
+    end
+  end
 end
 

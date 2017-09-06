@@ -2,6 +2,8 @@ require "byebug"
 require "active_job_resque_solo"
 require "support/matchers/active_job_matchers"
 require "support/contexts/fake_resque_context"
+require "support/contexts/fake_resque_redis_context"
+require 'active_support/testing/time_helpers'
 require "active_job"
 
 RSpec.configure do |config|

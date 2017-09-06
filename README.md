@@ -1,6 +1,6 @@
 # ActiveJobResqueSolo
 
-A plugin for ActiveJob with Resque to prevent duplicate enqueing of jobs.
+A plugin for ActiveJob with Resque to prevent duplicate enqueuing of jobs.
 
 [![Build Status](https://travis-ci.org/kinkade/active_job_resque_solo.svg?branch=master)](https://travis-ci.org/kinkade/active_job_resque_solo)
 
@@ -74,21 +74,41 @@ class MyJob < ActiveJob::Base
   end
 end
 ```
+## Locking
 
-## Duplicate enqueues are still possible
+Solo uses an internal locking mechanism to prevent multiple processes from
+enqueuing the same job during race conditions.  This gem does not perform any
+locking around job execution.
+
+The lock prevents competing jobs of the same class and arguments from being
+enqueued, complying with the argument filtering programmed with `solo_only_args`
+and `solo_except_args`.
+
+The default Redis key prefix is "ajr_solo".  It can be set to a different,
+arbitrary string of your choice using `solo_lock_key_prefix`:
+
+```ruby
+class MyJob < ActiveJob::Base
+
+  include ActiveJob::Plugins::Resque::Solo
+
+  solo_lock_key_prefix "my_lock_prefix"
+
+  def perform(*args)
+  end
+end
+```
+
+## Duplicate enqueues are possible
 
 While this plugin will greatly reduce duplicate instances of a job from being
-enqueued, there are two scenarios where duplicates may still be enqueued,
-so be sure to check out other gems for locking if your job is not idempotent.
+enqueued, a job may be enqueued multiple times if the Redis response times are
+very slow. Slowness could be caused by extremely high load on Redis or networking
+issues.
 
-1. When multiple processes simultaneously attempt to enqueue the same job, two or
-more instances may be enqueued.
-2. If your queue has many jobs, and workers remove a job while Solo scans
-the queue, it's possible for the original enqueued job to be missed. Solo will allow
-the new instance of the job to be enqueued.
-
-Solo errors towards allowing a duplicate job instance to be enqueued rather than
-prevent a job from being enqueued at all.
+The locks are acquired for dynamic amounts of time, but expire quickly, typically
+in one second. Killed workers will not leave long-lived, orphaned locks to
+adversely block jobs from being enqueued.
 
 ## Contributing
 

@@ -1,14 +1,19 @@
+require_relative "lock"
+require 'json'
+require 'digest/sha1'
+
 module ActiveJob
   module Plugins
     module Resque
       module Solo
         class Inspector
 
-          def initialize(only_args, except_args)
+          def initialize(only_args, except_args, lock_key_prefix)
             @only_args = only_args
             @except_args = except_args || []
             # always ignore the ActiveJob symbol hash key.
             @except_args << "_aj_symbol_keys" unless @except_args.include?("_aj_symbol_keys")
+            @lock_key_prefix = lock_key_prefix.present? ? lock_key_prefix : "ajr_solo"
           end
 
           def self.resque_present?
@@ -18,8 +23,13 @@ module ActiveJob
           def around_enqueue(job, block)
             if Inspector::resque_present?
 
-              if !job_enqueued?(job) && !job_executing?(job)
-                block.call
+              Lock.try_acquire_release(lock_key(job)) do |lock, extend_at|
+                @lock = lock
+                @extend_lock_at = extend_at
+
+                if !job_enqueued?(job) && !job_executing?(job)
+                  block.call
+                end
               end
             else
               # if resque is not present, always enqueue
@@ -31,25 +41,18 @@ module ActiveJob
             size = ::Resque.size(job.queue_name)
             return false if size.zero?
 
-            page_size = 250
-            pages = (size/page_size).to_i + 1
-            jobs = []
+            scheduled_jobs = ::Resque.peek(job.queue_name, 0, 0)
 
-            # It's possible for this loop to skip jobs if they
-            # are dequeued while the loop is in progress.
-            (0..pages).each do |i|
-              page_start = i * page_size
-              page = ::Resque.peek(job.queue_name, page_start, page_size)
-              break if page.empty?
-              jobs += page
-            end
+            extend_lock
 
             job_class, job_arguments = job(job)
 
-            (jobs.size-1).downto(0) do |i|
-              scheduled_job = jobs[i]
+            (scheduled_jobs.size-1).downto(0) do |i|
+              scheduled_job = scheduled_jobs[i]
               return true if job_enqueued_with_args?(job_class, job_arguments, scheduled_job)
+              extend_lock
             end
+
             false
           end
 
@@ -62,6 +65,8 @@ module ActiveJob
               args = processing["payload"]["args"][0]
               job_with_args_eq?(job_class, job_arguments, args)
             end
+
+            extend_lock
           end
 
           def job_enqueued_with_args?(job_class, job_arguments, scheduled_job)
@@ -96,6 +101,18 @@ module ActiveJob
             end
 
             args
+          end
+
+          def lock_key(job)
+            job_class, job_arguments = job(job)
+            sha1 = Digest::SHA1.hexdigest(job_arguments.to_json)
+            "#{@lock_key_prefix}:#{job_class}:#{sha1}"
+          end
+
+          def extend_lock
+            if Time.now.utc >= @extend_lock_at
+              @extend_lock_at = @lock.extend
+            end
           end
         end
       end
