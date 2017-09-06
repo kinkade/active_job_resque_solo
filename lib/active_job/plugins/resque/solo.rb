@@ -1,4 +1,5 @@
 require_relative 'solo/inspector'
+require_relative 'solo/lock'
 
 module ActiveJob
   module Plugins
@@ -24,7 +25,13 @@ module ActiveJob
           end
 
           def solo_inspector
-            @solo_inspector ||= Inspector.new(@solo_only_args, @solo_except_args)
+            @solo_inspector ||= Inspector.new(@solo_only_args, @solo_except_args, @solo_lock_key_prefix)
+          end
+
+          def solo_lock_key_prefix(key_prefix)
+            @solo_lock_key_prefix = key_prefix.strip
+            raise ArgumentError, "solo_lock_key_prefix cannot be blank or only spaces." if @solo_lock_key_prefix.blank?
+
           end
         end
       end
