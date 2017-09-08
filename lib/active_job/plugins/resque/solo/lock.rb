@@ -60,9 +60,8 @@ module ActiveJob
 
             @redis.watch(@key) do
               if @redis.get(@key) == @uuid
-                extend_at = Time.now.utc + (EXECUTE_TTL.to_f / 2)
-                @redis.multi do |multi|
-                  multi.expire(@key, EXECUTE_TTL.to_i)
+                if @redis.multi{ |multi| multi.expire(@key, EXECUTE_TTL.to_i) }.present?
+                  extend_at = Time.now.utc + (EXECUTE_TTL.to_f / 2)
                 end
               end
             end

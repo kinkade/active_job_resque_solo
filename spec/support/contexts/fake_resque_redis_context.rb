@@ -28,7 +28,9 @@ RSpec.shared_context "fake resque redis" do
 
     # #expire
     allow(redis).to receive(:expire) do |key, ttl|
+      return false unless redis_store.has_key?(key)
       redis_expires[key] = Time.now.utc + ttl.to_i
+      true
     end
 
     # #del
@@ -41,6 +43,13 @@ RSpec.shared_context "fake resque redis" do
     allow(redis).to receive(:watch).and_yield
 
     # #multi
-    allow(redis).to receive(:multi).and_yield(redis)
+    allow(redis).to receive(:multi) do |&block|
+      result = []
+      multi = double()
+      allow(multi).to receive(:del) { |key| result << redis.del(key) }
+      allow(multi).to receive(:expire) { |key, ttl| result << redis.expire(key, ttl) }
+      block.call(multi)
+      result
+    end
   end
 end
