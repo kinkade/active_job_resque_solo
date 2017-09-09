@@ -42,17 +42,9 @@ module ActiveJob
 
             if @redis.set(@key, @uuid, px: px, nx: true)
               @acquired = @uuid
-            else
-              extend_at = Time.now.utc
-              @acquired = @redis.get(@key)
             end
 
-            # Consider the lock not acquired if it is proven
-            # that another process has acquired the lock.
-            #
-            # It is unlikely that acquired will be nil, but
-            # it is possible if Redis is slow due to extreme load.
-            (@acquired.nil? || @acquired == @uuid) ? extend_at : nil
+            @acquired == @uuid ? extend_at : nil
           end
 
           def extend
