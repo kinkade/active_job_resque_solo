@@ -1,4 +1,4 @@
-# 0.3.2
+# 0.3.3
 
 * Simplifies lock acquisition and tightens its restrictions, reducing chances of duplicate enqueues.
 
