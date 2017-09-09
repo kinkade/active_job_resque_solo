@@ -1,3 +1,7 @@
+# 0.3.2
+
+* Simplifies lock acquisition and tightens its restrictions, reducing chances of duplicate enqueues.
+
 # 0.3.1.pre
 
 * Improves Lock efficiency by removing one call to Redis during #extend.

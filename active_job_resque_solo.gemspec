@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.email         = ["kinkadep@gmail.com"]
 
   spec.summary       = %q{Prevents duplicate ActiveJob+Resque jobs from being enqueued.}
-  spec.description   = %q{If you are using ActiveJob with the Resque Adapter, this gem will help prevent duplicate jobs, based on arguments, from being enqueued to Resque.}
+  spec.description   = %q{If you are using ActiveJob with the Resque Adapter, this gem will prevent a jobs, based on arguments, from being enqueued to Resque as long as a duplicate is already in queue or executing on a worker.}
   spec.license       = "MIT"
   spec.homepage      = "https://github.com/kinkade/active_job_resque_solo"
 
@@ -21,6 +21,8 @@ Gem::Specification.new do |spec|
   spec.bindir        = "exe"
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
+
+  spec.required_ruby_version = ">= 2.2.0"
 
   spec.add_dependency "rails", ">= 4.2.0", "< 6"
 
