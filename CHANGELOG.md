@@ -1,3 +1,7 @@
+# 0.3.4
+
+* Fix bug that could prevent enqueing with slowly performing locks.
+
 # 0.3.3
 
 * Simplifies lock acquisition and tightens its restrictions, reducing chances of duplicate enqueues.
