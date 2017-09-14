@@ -59,14 +59,16 @@ module ActiveJob
           def job_executing?(job)
             job_class, job_arguments = job(job)
 
-            ::Resque.workers.any? do |worker|
+            is_executing = ::Resque.workers.any? do |worker|
               processing = worker.processing
               next false if processing.blank?
               args = processing["payload"]["args"][0]
               job_with_args_eq?(job_class, job_arguments, args)
             end
 
-            extend_lock
+            extend_lock unless is_executing
+
+            is_executing
           end
 
           def job_enqueued_with_args?(job_class, job_arguments, scheduled_job)
