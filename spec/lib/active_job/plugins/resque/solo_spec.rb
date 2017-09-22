@@ -61,7 +61,6 @@ RSpec.describe ActiveJob::Plugins::Resque::Solo do
 
       solo_only_args :user
 
-      def self.resque_present?; true; end
       def perform(user: nil, ignored_arg: nil); end
     end
 
@@ -96,7 +95,6 @@ RSpec.describe ActiveJob::Plugins::Resque::Solo do
 
       solo_except_args :ignored_arg
 
-      def self.resque_present?; true; end
       def perform(user: nil, ignored_arg: nil); end
     end
 
@@ -181,6 +179,47 @@ RSpec.describe ActiveJob::Plugins::Resque::Solo do
             solo_lock_key_prefix
           end
         end.to raise_error(ArgumentError)
+      end
+    end
+  end
+
+  describe "#solo_any_args" do
+    class TestAnyArgsJob < ActiveJob::Base
+      include ActiveJob::Plugins::Resque::Solo
+      queue_as QUEUE
+
+      solo_any_args
+
+      def perform(arg1:); end
+    end
+
+    let(:job_class) { TestAnyArgsJob }
+    let(:arg) { 1 }
+
+    subject { TestAnyArgsJob.perform_later(arg: arg) }
+
+   context "when solo_any_args is present" do
+     context "when no jobs are enqueued" do
+       let(:enqueued_job) { nil }
+       it { expect{ subject }.to have_enqueued(TestAnyArgsJob) }
+     end
+
+       context "when the job is already on the queue with the same arguments" do
+        let(:enqueued_job_args) { { arg: arg } }
+
+        it { expect{ subject }.to_not have_enqueued(TestAnyArgsJob) }
+      end
+
+      context "when the job is already on the queue with the different argument values" do
+        let(:enqueued_job_args) { { arg: 0 } }
+
+        it { expect{ subject }.to_not have_enqueued(TestAnyArgsJob) }
+      end
+
+      context "when the job is already on the queue with the different arguments" do
+        let(:enqueued_job_args) { { other: arg } }
+
+        it { expect{ subject }.to_not have_enqueued(TestAnyArgsJob) }
       end
     end
   end

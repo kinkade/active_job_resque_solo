@@ -14,6 +14,10 @@ module ActiveJob
         end
 
         module ClassMethods
+          def solo_any_args
+            @solo_any_args = true
+          end
+
           def solo_only_args(*args)
             @solo_only_args = args.compact.map(&:to_s).uniq
             raise ArgumentError, "solo_only_args requires one or more field names" if @solo_only_args.empty?
@@ -25,7 +29,7 @@ module ActiveJob
           end
 
           def solo_inspector
-            @solo_inspector ||= Inspector.new(@solo_only_args, @solo_except_args, @solo_lock_key_prefix)
+            @solo_inspector ||= Inspector.new(@solo_any_args, @solo_only_args, @solo_except_args, @solo_lock_key_prefix)
           end
 
           def solo_lock_key_prefix(key_prefix)

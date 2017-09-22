@@ -8,7 +8,8 @@ module ActiveJob
       module Solo
         class Inspector
 
-          def initialize(only_args, except_args, lock_key_prefix)
+          def initialize(any_args, only_args, except_args, lock_key_prefix)
+            @any_args = !!any_args
             @only_args = only_args
             @except_args = except_args || []
             # always ignore the ActiveJob symbol hash key.
@@ -92,13 +93,17 @@ module ActiveJob
 
           def job_args(args)
             if args.present?
-              args.map do |arg|
-                if arg.is_a? Hash
-                  arg.keep_if { |k,v| @only_args.include?(k.to_s) } if @only_args.present?
-                  arg.keep_if { |k,v| !@except_args.include?(k.to_s) } if @except_args.present?
-                end
+              if @any_args
+                args = []
+              else
+                args.map do |arg|
+                  if arg.is_a? Hash
+                    arg.keep_if { |k,v| @only_args.include?(k.to_s) } if @only_args.present?
+                    arg.keep_if { |k,v| !@except_args.include?(k.to_s) } if @except_args.present?
+                  end
 
-                arg
+                  arg
+                end
               end
             end
 
