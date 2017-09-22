@@ -42,6 +42,7 @@ You can control which named arguments are used to determine uniqueness in the qu
 
 * `solo_only_args`
 * `solo_except_args`
+* `solo_any_args`
 
 ```ruby
 class MyJob < ActiveJob::Base
@@ -71,6 +72,25 @@ class MyJob < ActiveJob::Base
   queue_as :default
 
   def perform(user:, nonce:)
+  end
+end
+```
+
+Specify `solo_any_args` to allow only one instance of your job to be enqueued or executing at any given
+time regardless of the arugments used in each instance.
+
+`solo_any_args` overrides `solo_only_args` and `solo_except_args`.
+
+```ruby
+class MyJob < ActiveJob::Base
+
+  include ActiveJob::Plugins::Resque::Solo
+
+  solo_any_args
+
+  queue_as :default
+
+  def perform(user: nil)
   end
 end
 ```

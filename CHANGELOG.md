@@ -1,3 +1,7 @@
+# 0.3.5
+
+Adds `solo_any_args` directive that will only allow one instance of a job class in the queue regardless of any arguments.
+
 # 0.3.4
 
 * Fix bug that could prevent enqueing with slowly performing locks.
