@@ -8,7 +8,45 @@ RSpec.describe ActiveJob::Plugins::Resque::Solo do
 
   before { allow(ActiveJob::Plugins::Resque::Solo::Inspector).to receive(:resque_present?).and_return(true) }
 
-  describe "#perform_later" do
+  describe "#perform()" do
+    class NoArgsTestJob < ActiveJob::Base
+      include ActiveJob::Plugins::Resque::Solo
+      queue_as QUEUE
+
+      def perform; end
+    end
+
+    let(:job_class) { NoArgsTestJob }
+    let(:enqueued_job_args) { nil }
+
+    subject { NoArgsTestJob.perform_later }
+
+    context "when the job is already on the queue" do
+      it "should not enqueue the job" do
+        expect { subject }.to_not have_enqueued(NoArgsTestJob).on_queue(QUEUE)
+      end
+    end
+
+    context "when the job is not already enqueued" do
+      let(:enqueued_job) { nil }
+
+      it "should appear on the queue" do
+        expect { subject }.to have_enqueued(NoArgsTestJob).on_queue(QUEUE)
+      end
+    end
+
+    context "when the job is already executing" do
+      let(:arguments) { nil }
+      let(:processing) { {"queue"=>QUEUE, "payload"=>{"args"=>[{"job_class"=>job_class.to_s, "queue_name"=>QUEUE, "arguments"=> arguments }]}} }
+
+      it "should not enqueue the job" do
+        expect { subject }.to_not have_enqueued(NoArgsTestJob).on_queue(QUEUE)
+      end
+    end
+
+  end
+
+  describe "#perform(*args)" do
     class DefaultTestJob < ActiveJob::Base
       include ActiveJob::Plugins::Resque::Solo
       queue_as QUEUE
