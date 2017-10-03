@@ -1,6 +1,10 @@
+# 0.3.6
+
+* Fix bug that would allow duplicate enqueues of jobs that had no arguments.
+
 # 0.3.5
 
-Adds `solo_any_args` directive that will only allow one instance of a job class in the queue regardless of any arguments.
+* Adds `solo_any_args` directive that will only allow one instance of a job class in the queue regardless of any arguments.
 
 # 0.3.4
 
