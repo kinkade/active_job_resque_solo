@@ -1,3 +1,7 @@
+# 0.3.7
+
+* Fix bug that would prevent resque-scheduler from enqueuing jobs with no arguments.
+
 # 0.3.6
 
 * Fix bug that would allow duplicate enqueues of jobs that had no arguments.

@@ -80,7 +80,6 @@ module ActiveJob
           def job_with_args_eq?(job_class, job_arguments, wrapper_args)
             return false if wrapper_args['job_class'] != job_class
             encoded_arguments = wrapper_args['arguments']
-            encoded_arguments = [] if encoded_arguments.nil?
             encoded_arguments = job_args(encoded_arguments)
             encoded_arguments == job_arguments
           end
