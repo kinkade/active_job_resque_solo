@@ -1,6 +1,6 @@
 # 0.3.8
 
-* Fix bug that caused ActiveJobResqueSolo to realize that the Rails app was configued for Resque.
+* Fix bug that caused ActiveJobResqueSolo to fail to realize that the Rails app was configued for Resque.
 
 # 0.3.7
 
