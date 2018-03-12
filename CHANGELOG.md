@@ -1,3 +1,7 @@
+# 0.3.8
+
+* Fix bug that caused ActiveJobResqueSolo to realize that the Rails app was configued for Resque.
+
 # 0.3.7
 
 * Fix bug that would prevent resque-scheduler from enqueuing jobs with no arguments.
