@@ -18,7 +18,7 @@ module ActiveJob
           end
 
           def self.resque_present?
-            ActiveJob::Base.queue_adapter == ActiveJob::QueueAdapters::ResqueAdapter
+            ActiveJob::Base.queue_adapter.is_a? ActiveJob::QueueAdapters::ResqueAdapter
           end
 
           def around_enqueue(job, block)
