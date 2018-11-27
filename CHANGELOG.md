@@ -1,3 +1,7 @@
+# 0.3.9
+
+* Add CI test for Ruby 2.5.0.
+
 # 0.3.8
 
 * Fix bug that caused ActiveJobResqueSolo to fail to realize that the Rails app was configued for Resque.
