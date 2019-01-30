@@ -7,6 +7,8 @@ module ActiveJob
     module Resque
       module Solo
         class Inspector
+          REENQUEUE_DELAY = 1.second
+          JOB_WRAPPER_CLASS = 'ActiveJob::QueueAdapters::ResqueAdapter::JobWrapperWithLock'.freeze
 
           def initialize(any_args, only_args, except_args, lock_key_prefix)
             @any_args = !!any_args
@@ -21,14 +23,18 @@ module ActiveJob
             ActiveJob::Base.queue_adapter.is_a? ActiveJob::QueueAdapters::ResqueAdapter
           end
 
-          def around_enqueue(job, block)
-            if Inspector::resque_present?
+          def self.resque_scheduler_present?
+            defined? ::Resque::Scheduler
+          end
 
-              Lock.try_acquire_release(lock_key(job)) do |lock, extend_at|
+          def around_enqueue(job, block)
+            if Inspector.resque_present?
+
+              Lock.try_acquire_release(lock_key('enqueued', job)) do |lock, extend_at|
                 @lock = lock
                 @extend_lock_at = extend_at
 
-                if !job_enqueued?(job) && !job_executing?(job)
+                if !job_enqueued?(job)
                   block.call
                 end
               end
@@ -39,17 +45,17 @@ module ActiveJob
           end
 
           def job_enqueued?(job)
-            size = ::Resque.size(job.queue_name)
+            size = ::Resque.size(job.queue_name) + scheduled_jobs_count
             return false if size.zero?
 
-            scheduled_jobs = ::Resque.peek(job.queue_name, 0, 0)
+            enqueued_jobs = ::Resque.peek(job.queue_name, 0, 0) + scheduled_jobs(job.queue_name)
 
             extend_lock
 
             job_class, job_arguments = job(job)
 
-            (scheduled_jobs.size-1).downto(0) do |i|
-              scheduled_job = scheduled_jobs[i]
+            (enqueued_jobs.size-1).downto(0) do |i|
+              scheduled_job = enqueued_jobs[i]
               return true if job_enqueued_with_args?(job_class, job_arguments, scheduled_job)
               extend_lock
             end
@@ -110,10 +116,24 @@ module ActiveJob
             args
           end
 
-          def lock_key(job)
+          def scheduled_jobs(queue_name)
+            return [] unless Inspector.resque_scheduler_present?
+
+            ::Resque.find_delayed_selection(JOB_WRAPPER_CLASS) do |job|
+              job[0]['queue_name'] == queue_name ? job : nil
+            end.map { |j| JSON.parse(j) }
+          end
+
+          def scheduled_jobs_count
+            return 0 unless Inspector.resque_scheduler_present?
+
+            ::Resque.count_all_scheduled_jobs
+          end
+
+          def lock_key(type, job)
             job_class, job_arguments = job(job)
             sha1 = Digest::SHA1.hexdigest(job_arguments.to_json)
-            "#{@lock_key_prefix}:#{job_class}:#{sha1}"
+            "#{@lock_key_prefix}:#{type}:#{job_class}:#{sha1}"
           end
 
           def extend_lock
