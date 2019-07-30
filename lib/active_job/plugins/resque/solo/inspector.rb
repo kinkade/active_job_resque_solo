@@ -64,6 +64,9 @@ module ActiveJob
               processing = worker.processing
               next false if processing.blank?
               args = processing["payload"]["args"][0]
+
+              next false if args['job_id'] == job.job_id
+
               job_with_args_eq?(job_class, job_arguments, args)
             end
 
