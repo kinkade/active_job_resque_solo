@@ -29,13 +29,18 @@ module ActiveJob
           end
 
           def solo_inspector
-            @solo_inspector ||= Inspector.new(@solo_any_args, @solo_only_args, @solo_except_args, @solo_lock_key_prefix)
+            @solo_inspector ||= Inspector.new(@solo_any_args, @solo_only_args, @solo_except_args, @solo_lock_key_prefix, @solo_self_enqueueing)
           end
 
           def solo_lock_key_prefix(key_prefix)
             @solo_lock_key_prefix = key_prefix.strip
             raise ArgumentError, "solo_lock_key_prefix cannot be blank or only spaces." if @solo_lock_key_prefix.blank?
 
+          end
+
+          def solo_self_enqueueing(setting)
+            raise ArgumentError, "solo_self_enqueueing may only be set to :allow or :prevent." unless [:allow, :prevent].include?(setting)
+            @solo_self_enqueueing = (setting == :allow)
           end
         end
       end
