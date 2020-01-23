@@ -5,6 +5,7 @@ RSpec.describe ActiveJob::Plugins::Resque::Solo do
   include_context "fake resque redis"
 
   QUEUE = "default_test_queue"
+  FIXED_EXECUTING_JOB_ID = 'FIXED-TEST-JOB-ID-AJRS'
 
   before { allow(ActiveJob::Plugins::Resque::Solo::Inspector).to receive(:resque_present?).and_return(true) }
 
@@ -220,6 +221,113 @@ RSpec.describe ActiveJob::Plugins::Resque::Solo do
         let(:enqueued_job_args) { { other: arg } }
 
         it { expect{ subject }.to_not have_enqueued(TestAnyArgsJob) }
+      end
+    end
+  end
+
+  describe "#solo_self_enqueueing" do
+    module TestExecutingJobId
+      def initialize
+        super
+        # Force the job_id for jobs serialized by ActiveJob when
+        # it enqueues a job for perform or perform_later.
+        #
+        # Do not do this in your actual job code:
+        @job_id = FIXED_EXECUTING_JOB_ID # For unit testing
+      end
+    end
+
+    class SelfRetryingJob < ActiveJob::Base
+      include ActiveJob::Plugins::Resque::Solo
+      include TestExecutingJobId
+
+      queue_as QUEUE
+
+      # solo_self_enqueueing :allow  # Default behavior is to allow self-enqueueing
+
+      def perform
+        DefaultSelfRetryingJob.perform_later
+      end
+    end
+
+    let(:job_instance) { subject.new }
+    let(:executing_job_id) { FIXED_EXECUTING_JOB_ID }
+
+    context "with default behavior" do
+      class DefaultSelfRetryingJob < ActiveJob::Base
+        include ActiveJob::Plugins::Resque::Solo
+        include TestExecutingJobId
+        queue_as QUEUE
+
+        # solo_self_enqueueing :allow  # Default behavior is to allow self-enqueueing
+
+        def perform
+          DefaultSelfRetryingJob.perform_later
+        end
+      end
+
+      let(:processing) { {"queue"=>QUEUE, "payload"=>{"args"=>[{"job_id"=>executing_job_id, "job_class"=>DefaultSelfRetryingJob.to_s, "queue_name"=>QUEUE, 'arguments' => []}]}} }
+      subject { DefaultSelfRetryingJob }
+
+      context "when it is enqueued with different instance id" do
+        let(:executing_job_id) { SecureRandom.uuid }
+        it { expect{ job_instance.perform }.to_not have_enqueued(DefaultSelfRetryingJob) }
+      end
+
+      context "when it is enqueued with the same job id" do
+        it { expect{ job_instance.perform }.to have_enqueued(DefaultSelfRetryingJob) }
+      end
+    end
+
+    context "with :prevent setting" do
+      class PreventSelfRetryingJob < ActiveJob::Base
+        include ActiveJob::Plugins::Resque::Solo
+        include TestExecutingJobId
+        queue_as QUEUE
+
+        solo_self_enqueueing :prevent
+
+        def perform
+          PreventSelfRetryingJob.perform_later
+        end
+      end
+
+      let(:processing) { {"queue"=>QUEUE, "payload"=>{"args"=>[{"job_id"=>executing_job_id, "job_class"=>PreventSelfRetryingJob.to_s, "queue_name"=>QUEUE, 'arguments' => []}]}} }
+      subject { PreventSelfRetryingJob }
+
+      context "when it is enqueued with different instance id" do
+        let(:executing_job_id) { SecureRandom.uuid }
+        it { expect{ job_instance.perform }.to_not have_enqueued(PreventSelfRetryingJob) }
+      end
+
+      context "when it is enqueued with the same job id" do
+        it { expect{ job_instance.perform }.to_not have_enqueued(PreventSelfRetryingJob) }
+      end
+    end
+
+    context "with :allow setting" do
+      class AllowSelfRetryingJob < ActiveJob::Base
+        include ActiveJob::Plugins::Resque::Solo
+        include TestExecutingJobId
+        queue_as QUEUE
+
+        solo_self_enqueueing :allow
+
+        def perform
+          AllowSelfRetryingJob.perform_later
+        end
+      end
+
+      let(:processing) { {"queue"=>QUEUE, "payload"=>{"args"=>[{"job_id"=>executing_job_id, "job_class"=>AllowSelfRetryingJob.to_s, "queue_name"=>QUEUE, 'arguments' => []}]}} }
+      subject { AllowSelfRetryingJob }
+
+      context "when it is enqueued with different instance id" do
+        let(:executing_job_id) { SecureRandom.uuid }
+        it { expect{ job_instance.perform }.to_not have_enqueued(AllowSelfRetryingJob) }
+      end
+
+      context "when it is enqueued with the same job id" do
+        it { expect{ job_instance.perform }.to have_enqueued(AllowSelfRetryingJob) }
       end
     end
   end

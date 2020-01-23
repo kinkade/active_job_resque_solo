@@ -8,13 +8,14 @@ module ActiveJob
       module Solo
         class Inspector
 
-          def initialize(any_args, only_args, except_args, lock_key_prefix)
+          def initialize(any_args, only_args, except_args, lock_key_prefix, self_enqueuing)
             @any_args = !!any_args
             @only_args = only_args
             @except_args = except_args || []
             # always ignore the ActiveJob symbol hash key.
             @except_args << "_aj_symbol_keys" unless @except_args.include?("_aj_symbol_keys")
             @lock_key_prefix = lock_key_prefix.present? ? lock_key_prefix : "ajr_solo"
+            @self_enqueueing = self_enqueuing
           end
 
           def self.resque_present?
@@ -63,9 +64,9 @@ module ActiveJob
             is_executing = ::Resque.workers.any? do |worker|
               processing = worker.processing
               next false if processing.blank?
-              args = processing["payload"]["args"][0]
 
-              next false if args['job_id'] == job.job_id
+              args = processing["payload"]["args"][0]
+              next false if (@self_enqueueing.nil? || @self_enqueueing) && args['job_id'] == job.job_id
 
               job_with_args_eq?(job_class, job_arguments, args)
             end

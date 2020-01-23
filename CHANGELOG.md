@@ -1,3 +1,8 @@
+# 1.0.0
+
+* Breaking change: Allow a job to reschedule itself while it executing but not enqueued.
+* Adds `solo_self_enqueueing` as an option to control the re-enqueueing behavior. Use `solo_self_enqueueing :prevent` for the behavior prior to version 1.0.0.
+
 # 0.3.9
 
 * Add CI test for Ruby 2.5.0.
