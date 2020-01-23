@@ -77,7 +77,7 @@ end
 ```
 
 Specify `solo_any_args` to allow only one instance of your job to be enqueued or executing at any given
-time regardless of the arugments used in each instance.
+time regardless of the arguments used in each instance.
 
 `solo_any_args` overrides `solo_only_args` and `solo_except_args`.
 
@@ -119,12 +119,39 @@ class MyJob < ActiveJob::Base
 end
 ```
 
+## Re-enqueueing from within the job
+
+The default behavior of this gem allows a Job to re-enqueue itself while it is
+executing. If you know that your job should not be re-enqueueing itself, you can
+prevent inadvertent re-enqueueing of the job by using `solo_self_enqueueing :prevent`.
+
+Jobs that `fail` or `raise` an error may be retried by the framework, and are not
+affected by this option.
+
+```ruby
+class MyJob < ActiveJob::Base
+
+  include ActiveJob::Plugins::Resque::Solo
+
+  solo_self_enqueueing :prevent
+
+  def perform(*args)
+     MyJob.perform_later # <== this will not enqueue a job because of :prevent, above.
+     raise MyError       # <== retries are still allowed
+  end
+end
+```
+
 ## Duplicate enqueues are possible
 
 While this plugin will greatly reduce duplicate instances of a job from being
 enqueued, a job may be enqueued multiple times if the Redis response times are
 very slow. Slowness could be caused by extremely high load on Redis or networking
 issues.
+
+Since duplicate enqueueing of jobs is a possibility, make sure that that your code
+does not rely on this gem for sensitive, critical sections of code that must not
+be processed more than once.
 
 The locks are acquired for dynamic amounts of time, but expire quickly, typically
 in one second. Killed workers will not leave long-lived, orphaned locks to
