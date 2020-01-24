@@ -1,3 +1,7 @@
+# 1.0.1
+
+* Allow Rails 6.
+
 # 1.0.0
 
 * Breaking change: Allow a job to reschedule itself while it executing but not enqueued.
