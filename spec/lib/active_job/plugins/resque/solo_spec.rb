@@ -37,6 +37,15 @@ RSpec.describe ActiveJob::Plugins::Resque::Solo do
       end
     end
 
+    context 'when a non-ActiveJob job is being processed' do
+      let(:enqueued_job) { nil }
+      let(:processing) { {"queue"=>QUEUE, "payload"=>{"class"=>"ResqueJob", "args"=>[]}} }
+
+      it "should appear on the queue" do
+        expect { subject }.to have_enqueued(DefaultTestJob).on_queue(QUEUE)
+      end
+    end
+
     context "when the job is not already enqueued" do
       let(:enqueued_job) { nil }
 
@@ -332,4 +341,3 @@ RSpec.describe ActiveJob::Plugins::Resque::Solo do
     end
   end
 end
-
