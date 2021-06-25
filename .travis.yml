@@ -1,10 +1,9 @@
 sudo: false
 language: ruby
 rvm:
-  - 2.3.0
-  - 2.4.0
   - 2.5.7
   - 2.6.0
   - 2.7.0
+  - 3.0.1
   - ruby-head
 before_install: gem install bundler -v "$(grep -A 1 "BUNDLED WITH" Gemfile.lock | tail -n 1)"

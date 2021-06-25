@@ -1,3 +1,6 @@
+# 1.0.2
+* If a worker is processing a job that does not have ActiveJob arguments, allow it to be enqueued rather than failing with an error. This happens if a job has been queued by Resque directly without ActiveJob.
+
 # 1.0.1
 
 * Allow Rails 6.
@@ -13,7 +16,7 @@
 
 # 0.3.8
 
-* Fix bug that caused ActiveJobResqueSolo to fail to realize that the Rails app was configued for Resque.
+* Fix bug that caused ActiveJobResqueSolo to fail to realize that the Rails app was configured for Resque.
 
 # 0.3.7
 
